@@ -77,6 +77,7 @@ No idea what the other files are doing but as start new (harder) projects I'm su
 2. Install the Node.js + dependencies:
 ```bash
 $ tar -xvf node.js.tar -C /opt/nodejs/ --strip-components=1 # Make sure to update .bashrc as well (lazy I know)
+$ npm install
 $ npm install -g typescript
 $ npm install -g aws-cdk
 ```
