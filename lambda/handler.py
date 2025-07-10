@@ -12,7 +12,7 @@ def lambda_handler(event, context):
     # Get source bucket and key (filename) from triggering event
     source_bucket = event['Records'][0]['s3']['bucket']['name']
     key_from_event = event['Records'][0]['s3']['object']['key']
-    source_key = urllib.parse.unquote_plus(key_from_event)
+    source_key = urllib.parse.unquote_plus(key_from_event) # use parsing module just incase the file is janky or has spaces
     
     # retry loop to get_object from s3 bucket
     response = None

@@ -12,11 +12,11 @@ export class ThumbnailMakerStack extends cdk.Stack {
     // Create public Bucket for image upload
     const IngressBucket = new s3.Bucket(this, 'IngressBucket', {
       bucketName: 'haughton-upload-image',
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-      autoDeleteObjects: true,
-      publicReadAccess: true,
-      versioned: true,
-      blockPublicAccess: {
+      removalPolicy: cdk.RemovalPolicy.DESTROY, // Destory if cdk stack is destroyed
+      autoDeleteObjects: true, // Delete objs in bucket
+      publicReadAccess: true, // Make Bucket wide open (not good for prod obvi)
+      versioned: true, // Enable verisoning
+      blockPublicAccess: { // Make Bucket wide open (not good for prod obvi)
         blockPublicAcls: false,
         blockPublicPolicy: false,
         ignorePublicAcls: false,
@@ -39,21 +39,21 @@ export class ThumbnailMakerStack extends cdk.Stack {
       }
     });
 
-    // Output Ingress bucket name
+    // Output Ingress bucket name on cli for ez access
     new cdk.CfnOutput(this, 'IngressBucketName', {
       value: IngressBucket.bucketName
     });
 
-    // Output Egress bucket name
+    // Output Egress bucket name on cli for ez access
     new cdk.CfnOutput(this, 'EgressBucketName', {
       value: EgressBucket.bucketName
     });
 
     // Define the lambda func
-    const thumbnailLambda = new lambda_python.PythonFunction(this, 'ThumbnailLambdaV3', {
-      entry: 'lambda', // Path to the folder containing your Python code
-      runtime: lambda.Runtime.PYTHON_3_11,
-      index: 'handler.py', // The file with your handler function
+    const thumbnailLambda = new lambda_python.PythonFunction(this, 'ThumbnailLambda', {
+      entry: 'lambda', // Path to the folder containing the Python code
+      runtime: lambda.Runtime.PYTHON_3_11, //3.13 wasnt working for me?
+      index: 'handler.py', // The file with the handler function
       handler: 'lambda_handler', // The name of the handler function
       environment: {
         DESTINATION_BUCKET: EgressBucket.bucketName,
