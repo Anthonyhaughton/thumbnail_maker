@@ -1,10 +1,9 @@
 import * as cdk from 'aws-cdk-lib';
-import { S3 } from 'aws-cdk-lib/aws-ses-actions';
 import { Construct } from 'constructs';
 import * as s3 from 'aws-cdk-lib/aws-s3';
-import * as sqs from 'aws-cdk-lib/aws-sqs';
-import { version } from 'process';
-import { S3Bucket } from 'aws-cdk-lib/aws-kinesisfirehose';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as lambda_python from '@aws-cdk/aws-lambda-python-alpha';
+import * as s3n from 'aws-cdk-lib/aws-s3-notifications';
 
 export class ThumbnailMakerStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -49,5 +48,28 @@ export class ThumbnailMakerStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'EgressBucketName', {
       value: EgressBucket.bucketName
     });
+
+    // Define the lambda func
+    const thumbnailLambda = new lambda_python.PythonFunction(this, 'ThumbnailLambdaV3', {
+      entry: 'lambda', // Path to the folder containing your Python code
+      runtime: lambda.Runtime.PYTHON_3_11,
+      index: 'handler.py', // The file with your handler function
+      handler: 'lambda_handler', // The name of the handler function
+      environment: {
+        DESTINATION_BUCKET: EgressBucket.bucketName,
+      },
+    });
+      
+    // Grant the lambda function read access to the uploads bucket
+    IngressBucket.grantRead(thumbnailLambda);
+
+    // Grant the lambda function write access to the processed bucket
+    EgressBucket.grantWrite(thumbnailLambda);
+    
+    // Set s3 trigger
+    IngressBucket.addEventNotification(
+      s3.EventType.OBJECT_CREATED,
+      new s3n.LambdaDestination(thumbnailLambda),
+    );
   }
 }
